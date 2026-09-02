@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matematiksel Model Dokümantasyonu — YBÜ Döndürme Önceliklendirme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1a24;
+  --bg-soft:#13232f;
+  --panel:#f7f5ef;
+  --panel-line:#e2ded2;
+  --ink:#1a2229;
+  --ink-soft:#5b6670;
+  --accent:#2f9e8f;
+  --accent-deep:#1c6f65;
+  --gold:#c98a2b;
+  --rose:#c0503f;
+  --rose-soft:#f6e4e0;
+  --mint:#e4f2ef;
+  --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--panel);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.65;}
+
+/* ---- Hero ---- */
+.hero{background:var(--bg);color:#eef4f3;padding:64px 32px 56px;position:relative;overflow:hidden;}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle at center,rgba(47,158,143,.22),transparent 70%);}
+.hero-inner{max-width:820px;margin:0 auto;position:relative;z-index:1;}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin:0 0 18px;}
+.hero h1{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(30px,5vw,50px);line-height:1.08;margin:0 0 20px;letter-spacing:-.5px;}
+.hero p{font-size:17px;color:#b6c6c8;max-width:640px;margin:0;}
+.hero .meta{margin-top:28px;font-family:var(--mono);font-size:12.5px;color:#8fa3a5;}
+
+/* ---- Layout ---- */
+.doc{max-width:820px;margin:0 auto;padding:0 32px 100px;}
+.toc{background:var(--bg-soft);color:#dfe9e9;border-radius:14px;padding:22px 26px;margin:-36px auto 56px;max-width:756px;position:relative;z-index:2;box-shadow:0 20px 50px -24px rgba(0,0,0,.5);}
+.toc h2{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin:0 0 14px;}
+.toc ol{margin:0;padding:0;list-style:none;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;}
+.toc li{counter-increment:toc;font-size:14px;}
+.toc li::before{content:counter(toc,decimal-leading-zero);font-family:var(--mono);font-size:11px;color:var(--gold);margin-right:10px;}
+.toc a{color:#dfe9e9;text-decoration:none;border-bottom:1px solid transparent;transition:border-color .2s;}
+.toc a:hover{border-color:var(--accent);}
+
+section{margin-bottom:52px;}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;padding-bottom:14px;border-bottom:2px solid var(--ink);}
+.sec-num{font-family:var(--mono);font-size:13px;color:var(--accent-deep);font-weight:500;}
+h2.sec-title{font-family:'Fraunces',serif;font-weight:500;font-size:27px;margin:0;letter-spacing:-.3px;}
+h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px;margin:32px 0 10px;color:var(--accent-deep);}
+p{margin:0 0 16px;}
+.lead{font-size:17px;color:var(--ink);}
+strong{font-weight:600;}
+em{color:var(--accent-deep);font-style:normal;font-weight:500;}
+
+/* ---- Formula block ---- */
+.formula{background:var(--bg);color:#eef4f3;border-radius:12px;padding:20px 24px;margin:20px 0;font-family:var(--mono);font-size:15px;overflow-x:auto;}
+.formula .fx{font-size:17px;letter-spacing:.3px;}
+.formula .note{display:block;color:#8fa3a5;font-size:12.5px;margin-top:8px;}
+.inline-fx{font-family:var(--mono);font-size:13.5px;background:var(--mint);color:var(--accent-deep);padding:1px 7px;border-radius:5px;white-space:nowrap;}
+
+/* ---- Param table ---- */
+.ptable{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px;}
+.ptable th{text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);border-bottom:1.5px solid var(--panel-line);padding:8px 10px;}
+.ptable td{border-bottom:1px solid var(--panel-line);padding:10px;vertical-align:top;}
+.ptable td:first-child{font-family:var(--mono);font-weight:500;color:var(--accent-deep);white-space:nowrap;}
+.ptable tr:last-child td{border-bottom:none;}
+
+/* ---- Callout ---- */
+.callout{border-left:3px solid var(--accent);background:var(--mint);border-radius:0 10px 10px 0;padding:16px 20px;margin:20px 0;font-size:14.5px;}
+.callout.why{border-color:var(--gold);background:#faf1df;}
+.callout.warn{border-color:var(--rose);background:var(--rose-soft);}
+.callout .tag{display:block;font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600;}
+.callout.why .tag{color:var(--gold);}
+.callout .tag.acc{color:var(--accent-deep);}
+.callout.warn .tag{color:var(--rose);}
+
+/* ---- Weight chips ---- */
+.weights{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0;}
+.wchip{flex:1;min-width:150px;background:#fff;border:1px solid var(--panel-line);border-radius:10px;padding:12px 14px;}
+.wchip .val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent-deep);}
+.wchip .lbl{font-size:13px;font-weight:600;margin:2px 0 4px;}
+.wchip .why{font-size:12px;color:var(--ink-soft);line-height:1.5;}
+
+/* ---- Step flow ---- */
+.flow{counter-reset:step;margin:24px 0;}
+.flow-item{position:relative;padding:0 0 22px 46px;border-left:2px solid var(--panel-line);margin-left:14px;}
+.flow-item:last-child{border-left-color:transparent;padding-bottom:0;}
+.flow-item::before{counter-increment:step;content:counter(step);position:absolute;left:-15px;top:-2px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--mono);font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;}
+.flow-item h4{margin:0 0 4px;font-size:15px;font-weight:600;}
+.flow-item p{margin:0;font-size:14px;color:var(--ink-soft);}
+
+.divider{height:1px;background:var(--panel-line);margin:0 0 52px;}
+
+/* ---- Scale comparison panels ---- */
+.scale-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:22px 0;}
+.scale-panel{border-radius:12px;padding:18px 20px;border:1px solid var(--panel-line);}
+.scale-panel.braden{background:#eef4f6;border-color:#cfe0e4;}
+.scale-panel.jc{background:#f3eef6;border-color:#ddcfe4;}
+.scale-panel .badge{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
+.scale-panel.braden .badge{background:#1c6f65;color:#fff;}
+.scale-panel.jc .badge{background:#7a4a8f;color:#fff;}
+.scale-panel h4{font-family:'Fraunces',serif;font-weight:500;font-size:17px;margin:0 0 10px;color:var(--ink);}
+.scale-panel .row{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);}
+.scale-panel .row:last-child{border-bottom:none;}
+.scale-panel .row .k{color:var(--ink-soft);}
+.scale-panel .row .v{font-family:var(--mono);font-weight:500;text-align:right;color:var(--ink);}
+.scale-panel .fx-mini{font-family:var(--mono);font-size:13px;background:rgba(255,255,255,.7);border-radius:6px;padding:8px 10px;margin:10px 0;color:var(--accent-deep);}
+.scale-panel.jc .fx-mini{color:#6b3d80;}
+@media(max-width:620px){.scale-split{grid-template-columns:1fr;}}
+footer{max-width:820px;margin:0 auto;padding:32px;border-top:2px solid var(--ink);font-size:13px;color:var(--ink-soft);}
+footer .mono{font-family:var(--mono);font-size:12px;}
+a.ref{color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--panel-line);}
+sup{font-family:var(--mono);font-size:10px;color:var(--gold);}
+
+@media(max-width:620px){
+  .toc ol{grid-template-columns:1fr;}
+  .hero{padding:48px 22px 44px;}
+  .doc{padding:0 22px 80px;}
+}
+/* ---- Big scale-section banner ---- */
+.scale-banner{border-radius:16px;padding:30px 32px;margin:64px 0 40px;color:#fff;position:relative;overflow:hidden;}
+.scale-banner.braden{background:linear-gradient(120deg,#1c6f65,#2f9e8f);}
+.scale-banner.jc{background:linear-gradient(120deg,#5a3170,#8a5aa0);}
+.scale-banner .part{font-family:var(--mono);font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.85;margin:0 0 10px;}
+.scale-banner h2{font-family:'Fraunces',serif;font-weight:500;font-size:30px;margin:0 0 12px;letter-spacing:-.3px;}
+.scale-banner p{margin:0;font-size:15px;opacity:.92;max-width:600px;}
+.scale-banner .tag-when{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.18);padding:5px 12px;border-radius:20px;}
+.sub{margin-bottom:34px;}
+.sub-head{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;padding-bottom:10px;border-bottom:1.5px solid var(--panel-line);}
+.sub-num{font-family:var(--mono);font-size:12px;font-weight:500;}
+.braden-accent .sub-num{color:#1c6f65;}
+.jc-accent .sub-num{color:#7a4a8f;}
+.sub-title{font-family:'Fraunces',serif;font-weight:500;font-size:21px;margin:0;}
+.braden-accent .formula{background:#12332e;}
+.jc-accent .formula{background:#2a1836;}
+.braden-accent h3{color:#1c6f65;}
+.jc-accent h3{color:#7a4a8f;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Matematiksel Model · Dokümantasyon</p>
+    <h1>Yoğun bakımda hasta bazlı döndürme ve önceliklendirme modeli</h1>
+    <p>Her hastaya kendi risk düzeyine göre bir döndürme periyodu atayan, sınırlı hemşire kaynağını gecikmeyi en aza indirecek biçimde dağıtan ve bunu tek tek gerekçelendirilmiş formüllerle yapan bir karar modelinin tam açıklaması.</p>
+    <p class="meta">İki risk ölçeği ayrı ayrı anlatılır: önce Braden, sonra Cubbin &amp; Jackson · Zamanlama: EDF + erken tetikleme · Birim: dakika</p>
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>İçindekiler</h2>
+  <ol>
+    <li><a href="#genel">Genel bakış ve mantık</a></li>
+    <li><a href="#notasyon">Ortak notasyon</a></li>
+    <li><a href="#braden">BÖLÜM A — Braden ile tam model</a></li>
+    <li><a href="#jc">BÖLÜM B — Cubbin &amp; Jackson ile tam model</a></li>
+    <li><a href="#ortak">Her iki ölçekte ortak olanlar</a></li>
+    <li><a href="#sinir">Sınırlar ve varsayımlar</a></li>
+  </ol>
+</nav>
+
+<main class="doc">
+
+  <section id="genel">
+    <div class="sec-head"><span class="sec-num">01</span><h2 class="sec-title">Genel bakış ve mantık</h2></div>
+    <p class="lead">Yoğun bakımda hastaların bası yarası oluşmaması için belirli aralıklarla döndürülmesi gerekir. Yaygın uygulama herkese sabit bir aralık (örneğin 2 saat) uygulamaktır; oysa doğru olan, aralığı hastanın riskine göre değiştirmektir. Bu model tam olarak bunu yapar ve iki soruyu birlikte çözer:</p>
+    <div class="flow">
+      <div class="flow-item"><h4>Her hasta ne sıklıkta döndürülmeli?</h4><p>Risk düzeyi yüksek hasta daha sık, düşük hasta daha seyrek. Bu, sabit değil hastaya özgü bir periyot demektir.</p></div>
+      <div class="flow-item"><h4>Aynı anda birden çok hasta döndürülmesi gerekince kim önce?</h4><p>Sınırlı sayıda hemşire var. Model, hangi hastanın önce döndürüleceğini nesnel bir kuralla sıralar.</p></div>
+    </div>
+    <p>Modelin temel felsefesi şudur: <strong>risk, sıralamayı doğrudan belirlemez.</strong> Risk yalnızca hastanın <em>periyodunu</em> belirler; sıralama ise "kimin vadesi daha yakın" sorusuna göre yapılır. Bu ayrım, "en yüksek riskli hasta her zaman önce döndürülsün" gibi yanlış ve adaletsiz bir sonucu engeller — çünkü yüksek riskli bir hasta yeni döndürülmüşse, henüz sırası gelmemiş olabilir.</p>
+    <div class="callout why"><span class="tag">Neden bu ayrım önemli?</span>Riski hem periyoda hem sıralamaya koymak "çift sayım" yaratır: aynı faktör iki kez avantaj sağlar ve yüksek riskli hasta sürekli öne geçerek düşük riskli hastaların ihmal edilmesine (starvation) yol açar. Riski yalnızca periyoda koyarak bu tuzaktan kaçınırız.</div>
+    <div class="callout"><span class="tag acc">Bu dokümanın yapısı</span>Model iki risk ölçeğinden birini kullanabilir. Karışıklığı önlemek için önce <strong>Bölüm A</strong>'da model baştan sona yalnızca <strong>Braden</strong> ile, ardından <strong>Bölüm B</strong>'de baştan sona yalnızca <strong>Cubbin &amp; Jackson</strong> ile anlatılır. İki ölçekte de aynı çalışan adımlar (aciliyet, sıralama, döngü, kararlılık) her bölümde kendi içinde tam verilir; kısa bir ortak özet de sonda yer alır.</div>
+  </section>
+
+  <section id="notasyon">
+    <div class="sec-head"><span class="sec-num">02</span><h2 class="sec-title">Ortak notasyon</h2></div>
+    <p>Her iki bölümde de kullanılan semboller aşağıdadır. Tüm zaman birimleri <strong>dakika</strong>dır. Ölçeğe özgü skorlar (b ve J/C) ilgili bölümlerde tanımlanır.</p>
+    <table class="ptable">
+      <thead><tr><th>Sembol</th><th>Anlamı</th><th>Değer / aralık</th></tr></thead>
+      <tbody>
+        <tr><td>t</td><td>Şu anki zaman</td><td>dakika</td></tr>
+        <tr><td>t<sub>son</sub></td><td>Hastanın en son döndürüldüğü an</td><td>dakika</td></tr>
+        <tr><td>t − t<sub>son</sub></td><td>Son döndürmeden bu yana geçen süre</td><td>dakika</td></tr>
+        <tr><td>R</td><td>Toplam risk</td><td>0–1 (1 = en yüksek)</td></tr>
+        <tr><td>T<sub>hedef</sub></td><td>Hedef döndürme periyodu</td><td>120–240 dk</td></tr>
+        <tr><td>U</td><td>Aciliyet oranı</td><td>0 = yeni, 1 = vade doldu</td></tr>
+        <tr><td>D</td><td>Vadeye kalan süre</td><td>dakika (negatif = gecikmiş)</td></tr>
+        <tr><td>s</td><td>İşlem (döndürme) süresi</td><td>dakika, hastaya özgü</td></tr>
+        <tr><td>N</td><td>Hemşire sayısı</td><td>tam sayı</td></tr>
+        <tr><td>θ</td><td>Erken tetikleme eşiği</td><td>varsayılan 0.8</td></tr>
+        <tr><td>L</td><td>Look-ahead penceresi</td><td>varsayılan 60 dk</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ============ BÖLÜM A: BRADEN ============ -->
+  <div class="scale-banner braden" id="braden">
+    <p class="part">Bölüm A</p>
+    <h2>Braden ölçeği ile tam model</h2>
+    <p>Bu bölüm, modelin tüm adımlarını baştan sona yalnızca Braden ölçeğiyle anlatır. Braden genel amaçlı, yaygın ve valide edilmiş bir ölçektir; YBÜ'de kullanılabilir, ancak kapsamadığı bazı yoğun bakım faktörleri modele ayrıca eklenir.</p>
+    <span class="tag-when">Uygun olduğu durum: genel + YBÜ, yaygın standart</span>
+  </div>
+
+  <div class="braden-accent">
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.1</span><h3 class="sub-title">Risk hesabı</h3></div>
+      <p>Braden skoru <span class="inline-fx">b</span> 6–23 arasındadır ve düşük skor yüksek riski gösterir. Önce ters çevrilip 0–1 aralığına normalize edilir:</p>
+      <div class="formula"><span class="fx">Braden riski = (23 − b) / 17</span><span class="note">b = 23 → risk 0 (en düşük) · b = 6 → risk 1 (en yüksek) · payda 23−6 = 17</span></div>
+      <p>Braden'in altı bileşeni (duyusal algı, nem, aktivite, hareketlilik, beslenme, sürtünme/makaslama) zaten bu skorun içindedir; bu yüzden bunlar tekrar eklenmez. Yalnızca Braden'in <strong>kapsamadığı</strong>, YBÜ literatüründe bağımsız risk faktörü olan üç değişken eklenir:</p>
+      <div class="formula"><span class="fx">R = 0.55·(Braden riski) + 0.20·V + 0.15·Y + 0.10·P</span><span class="note">V = ventilasyon (0/1) · Y = yaş riski (0–1) · P = perfüzyon/vazopresör (0–1)</span></div>
+      <div class="weights">
+        <div class="wchip"><div class="val">0.55</div><div class="lbl">Braden riski</div><div class="why">YBÜ dahil en güçlü tek belirleyici ve valide edilmiş ölçek. Baskın ağırlığı hak eder.</div></div>
+        <div class="wchip"><div class="val">0.20</div><div class="lbl">Ventilasyon</div><div class="why">Bağımsız risk faktörü, yüksek etki büyüklüğü. Braden bunu hiç kapsamaz.</div></div>
+        <div class="wchip"><div class="val">0.15</div><div class="lbl">Yaş riski</div><div class="why">Tutarlı bağımsız faktör. Braden yaşı hesaba katmaz.</div></div>
+        <div class="wchip"><div class="val">0.10</div><div class="lbl">Perfüzyon</div><div class="why">Bağımsız ama etkisi literatürde tartışmalı → en düşük ağırlık.</div></div>
+      </div>
+      <div class="callout why"><span class="tag">Katsayılar nereden geliyor?</span>Ağırlıkların <strong>göreli sırası</strong> (Braden en yüksek, sonra ventilasyon, yaş, perfüzyon) literatürdeki bağımsız risk faktörü çalışmalarına dayanır. Kesin sayılar (0.55, 0.20…) tek bir çalışmadan türetilmiş regresyon katsayıları değil, literatürle tutarlı ve gerekçelendirilmiş başlangıç değerleridir. Kesin kalibrasyon için uzman paneli (Delphi) veya kendi verinizle lojistik regresyon gerekir.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.2</span><h3 class="sub-title">Hedef süre (periyot)</h3></div>
+      <p>Toplam risk, hastaya özgü döndürme periyoduna dönüştürülür. Risk yükseldikçe periyot kısalır:</p>
+      <div class="formula"><span class="fx">T<sub>hedef</sub> = 120 + 120·(1 − R)</span><span class="note">R = 1 → 120 dk (en sık) · R = 0 → 240 dk (en seyrek)</span></div>
+      <p>Örnek: Braden 10, ventilasyonda, ≥80 yaşında, kötü perfüzyonlu bir hastada (R = 0.55·0.76 + 0.20·1 + 0.15·1 + 0.10·1 ≈ 0.87) periyot ~136 dakikaya iner. Braden tek başına düşük olsa da diğer üç faktör düşükse (örn. ventilasyonsuz, genç, iyi perfüzyon) periyot yalnızca ~149 dakikaya iner — 120'ye gerçekten yaklaşmak için Braden'in yanı sıra diğer üç faktörün de yüksek olması gerekir, çünkü Braden'in ağırlığı 0.55 olsa da tek başına R'yi 1'e yaklaştıramaz. Braden 20, ventilasyonsuz, genç bir hastada risk düşüktür (R ≈ 0.10) ve periyot ~228 dakikaya, yani üst sınıra yaklaşır.</p>
+      <div class="callout why"><span class="tag">Neden 120–240, neden önce 180 idi?</span>Alt sınır (120 dk = standart 2 saatlik kural) sağlam bir klinik dayanaktır ve değişmedi. Üst sınır başlangıçta 180 dk (3 saat) olarak alınmıştı, ama bu konuşmanın başında incelediğimiz TEAM-UP çalışması düşük-orta riskli hastalarda (Braden ≥10) 2, 3 ve 4 saatlik aralıkları karşılaştırmış ve aralarında anlamlı fark bulmamıştı — yani 4 saate (240 dk) kadar çıkmak doğrudan kanıtla destekleniyor. 180 dk sınırı bu kanıtla karşılaştırılmadan kullanılıyordu ve gereğinden muhafazakârdı: en yüksek riskli hasta ile en düşük riskli hasta arasındaki periyot farkını yalnızca 1.5 kata (60 dk) sıkıştırıyordu. 120–240 aralığı bu farkı 2 kata (120 dk) çıkararak modelin "kişiye göre periyot" iddiasını daha anlamlı kılıyor. Daha da yükseğe (6–8 saat gibi) çıkmadık çünkü o sayılar kategorik bir tahmindi, doğrudan bir çalışmayla test edilmemişti.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.3</span><h3 class="sub-title">Aciliyet ve vade</h3></div>
+      <p>Periyot belirlendikten sonra hastanın o an ne kadar acil olduğu hesaplanır:</p>
+      <div class="formula"><span class="fx">U = (t − t<sub>son</sub>) / T<sub>hedef</sub></span><span class="note">U = 0 → yeni · U = 1 → tam vade · U &gt; 1 → gecikmiş</span></div>
+      <p>Sıralamada asıl kullanılan büyüklük vadeye kalan süredir:</p>
+      <div class="formula"><span class="fx">D = (1 − U)·T<sub>hedef</sub></span><span class="note">D &gt; 0 → zamanında · D &lt; 0 → gecikmiş</span></div>
+      <div class="callout"><span class="tag acc">Geçen süre neden ayrı risk terimi değil?</span>Geçen süre (t − t<sub>son</sub>) modele burada, aciliyet üzerinden zaten girer. Risk katmanına ayrıca "zaman baskısı" eklemek tekrar olurdu; bu yüzden risk yalnızca yavaş değişen klinik faktörleri içerir.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.4</span><h3 class="sub-title">Kesim noktası ve kritik sınır</h3></div>
+      <p>Braden için literatürde valide edilmiş yüksek risk eşiği <strong>b ≤ 18</strong>'dir (meta-analizde bulunan optimal kesim değeri). Kritik sınır, hedef sürenin üzerine eklenen tolerans ile belirlenir:</p>
+      <div class="formula"><span class="fx">tolerans = 20 − 10·R</span><br><span class="fx">b ≤ 18 (yüksek risk) ise → tolerans × 0.5</span><br><span class="fx">kritik sınır = T<sub>hedef</sub> + tolerans</span><span class="note">(t − t<sub>son</sub>) ≥ kritik sınır → hasta KRİTİK, mutlak öncelik</span></div>
+      <p>Yani yüksek riskli hasta vadesini geçtiğinde daha çabuk kritikleşir; Braden ≤ 18 olan hastada tolerans yarıya inerek bu etkiyi belirginleştirir.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.5</span><h3 class="sub-title">Erken tetikleme</h3></div>
+      <p>Boş bir hemşireye yalnızca aciliyeti erken tetikleme eşiğine ulaşan (veya kritik olan) hasta atanabilir:</p>
+      <div class="formula"><span class="fx">Uygun ⟺ U ≥ θ &nbsp;VEYA&nbsp; hasta KRİTİK</span><span class="note">θ = 0.8 (varsayılan)</span></div>
+      <p>Eşiğin altındaki hasta, kapasite boşta olsa bile bekletilir; amaç aciliyet 1'e varmadan hastayı döndürüp sıfırlayarak gecikmeyi önlemektir.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.6</span><h3 class="sub-title">Sıralama (EDF + kısa-iş kırıcı)</h3></div>
+      <p>Uygun hastalar arasında öncelik üç katmanla belirlenir:</p>
+      <div class="formula">1. Kritik olan hasta, olmayanın önündedir.<br>2. Aynı durumdaysa → vadesi yakın (küçük D) önde (EDF).<br>3. YALNIZCA ikisi de zamanında (D &gt; 0) ve vadeleri<br>&nbsp;&nbsp;&nbsp;look-ahead penceresinde (D ≤ L) ise → kısa işlem (küçük s) önde.<span class="note">Gecikmiş hasta (D &lt; 0) her zaman gecikmemişin önünde; en çok geciken en önde.</span></div>
+      <div class="callout warn"><span class="tag">Kritik kural</span>Kısa-iş kırıcısı yalnızca iki hasta da zamanındaysa çalışır. Biri gecikmişse saf EDF uygulanır — böylece işlemi uzun ama gecikmiş bir hasta, kısa ama daha az acil birine yenilmez.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">A.7</span><h3 class="sub-title">İşleyiş döngüsü ve kararlılık</h3></div>
+      <p>Her adımda: biten hemşireler serbest bırakılır → risk ve periyot güncellenir → uygun hastalar seçilir → EDF ile sıralanıp atanır → döndürülen hastada t<sub>son</sub> sıfırlanır, Braden yeniden değerlendirilir, pozisyon döngüde ilerler:</p>
+      <div class="formula"><span class="fx">Sırtüstü → Sağ lateral → Sırtüstü → Sol lateral → (tekrar)</span></div>
+      <p>Sistemin kararlı olması, yani gecikmelerin sonsuza birikmemesi için toplam yükün hemşire sayısını aşmaması gerekir:</p>
+      <div class="formula"><span class="fx">ρ<sub>i</sub> = s<sub>i</sub> / T<sub>hedef,i</sub> &nbsp;&nbsp;ve&nbsp;&nbsp; Σ ρ<sub>i</sub> ≤ N</span><span class="note">Bu aşılırsa hiçbir sıralama kuralı tüm hastaları vadesinde tutamaz.</span></div>
+    </div>
+
+  </div>
+
+
+  <!-- ============ BÖLÜM B: CUBBIN & JACKSON ============ -->
+  <div class="scale-banner jc" id="jc">
+    <p class="part">Bölüm B</p>
+    <h2>Cubbin &amp; Jackson ölçeği ile tam model</h2>
+    <p>Bu bölüm, modelin tüm adımlarını baştan sona yalnızca Cubbin &amp; Jackson (J/C) ölçeğiyle anlatır. J/C doğrudan YBÜ hastaları için tasarlanmıştır ve Braden'den daha yüksek ayırt edicilik gösterir. Yaş, solunum, oksijen ve hemodinamiyi zaten içerdiği için ek faktör gerektirmez.</p>
+    <span class="tag-when">Uygun olduğu durum: saf YBÜ, daha yüksek doğruluk</span>
+  </div>
+
+  <div class="jc-accent">
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.1</span><h3 class="sub-title">Risk hesabı</h3></div>
+      <p>J/C skoru <span class="inline-fx">J/C</span> 9–48 arasındadır ve düşük skor yüksek riski gösterir. Braden'deki gibi ters çevrilip normalize edilir:</p>
+      <div class="formula"><span class="fx">R = (48 − J/C) / 39</span><span class="note">J/C = 48 → risk 0 (en düşük) · J/C = 9 → risk 1 (en yüksek) · payda 48−9 = 39</span></div>
+      <div class="callout"><span class="tag acc">Neden ek faktör yok?</span>J/C'nin 12 maddesi arasında yaş, solunum, oksijen gereksinimi ve hemodinami zaten vardır — yani Braden modelinde ayrıca eklediğimiz ventilasyon, yaş ve perfüzyon burada ölçeğin içindedir. Üstüne ek terim koymak çift sayım olurdu. Bu yüzden J/C ile risk tek skordan gelir; model sadeleşir ve savunması kolaylaşır.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.2</span><h3 class="sub-title">Hedef süre (periyot)</h3></div>
+      <p>Periyot formülü Braden bölümüyle birebir aynıdır; yalnızca R değeri J/C'den gelir:</p>
+      <div class="formula"><span class="fx">T<sub>hedef</sub> = 120 + 120·(1 − R)</span><span class="note">R = 1 → 120 dk · R = 0 → 240 dk</span></div>
+      <p>Örnek: J/C 15 (yüksek risk) olan hastada periyot ~138 dakikaya, J/C 38 (düşük risk) olan hastada ~209 dakikaya yaklaşır. Aralığın 120–240 olmasının gerekçesi Bölüm A.2'de açıklanmıştır (TEAM-UP çalışmasının 4 saate kadar test ettiği kanıt).</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.3</span><h3 class="sub-title">Aciliyet ve vade</h3></div>
+      <p>Bu adım ölçekten bağımsızdır ve Braden bölümüyle aynıdır:</p>
+      <div class="formula"><span class="fx">U = (t − t<sub>son</sub>) / T<sub>hedef</sub></span><br><span class="fx">D = (1 − U)·T<sub>hedef</sub></span><span class="note">U: aciliyet oranı · D: vadeye kalan süre (negatif = gecikmiş)</span></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.4</span><h3 class="sub-title">Kesim noktası ve kritik sınır</h3></div>
+      <p>J/C için literatürde valide edilmiş yüksek risk eşiği <strong>J/C ≤ 28</strong>'dir (6203 hastalık çok merkezli bir çalışmada bulunan optimal kesim değeri; aynı çalışmada Waterlow için eşik 22 çıkmıştır). Kritik sınır mantığı Braden ile aynıdır, yalnızca eşik değeri farklıdır:</p>
+      <div class="formula"><span class="fx">tolerans = 20 − 10·R</span><br><span class="fx">J/C ≤ 28 (yüksek risk) ise → tolerans × 0.5</span><br><span class="fx">kritik sınır = T<sub>hedef</sub> + tolerans</span><span class="note">(t − t<sub>son</sub>) ≥ kritik sınır → hasta KRİTİK, mutlak öncelik</span></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.5</span><h3 class="sub-title">Erken tetikleme</h3></div>
+      <p>Ölçekten bağımsız, Braden bölümüyle aynıdır:</p>
+      <div class="formula"><span class="fx">Uygun ⟺ U ≥ θ &nbsp;VEYA&nbsp; hasta KRİTİK</span><span class="note">θ = 0.8 (varsayılan)</span></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.6</span><h3 class="sub-title">Sıralama (EDF + kısa-iş kırıcı)</h3></div>
+      <p>Sıralama kuralı ölçekten bağımsızdır; Braden bölümündeki üç katmanlı kuralın aynısı geçerlidir:</p>
+      <div class="formula">1. Kritik olan hasta, olmayanın önündedir.<br>2. Aynı durumdaysa → vadesi yakın (küçük D) önde (EDF).<br>3. YALNIZCA ikisi de zamanında ve look-ahead penceresinde ise → kısa işlem önde.<span class="note">Gecikmiş hasta her zaman gecikmemişin önünde.</span></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-head"><span class="sub-num">B.7</span><h3 class="sub-title">İşleyiş döngüsü ve kararlılık</h3></div>
+      <p>Döngü ve kararlılık koşulu Braden bölümüyle birebir aynıdır; tek fark, işlem sonrası yeniden değerlendirilen skorun J/C olmasıdır:</p>
+      <div class="formula"><span class="fx">Sırtüstü → Sağ lateral → Sırtüstü → Sol lateral → (tekrar)</span><br><span class="fx">ρ<sub>i</sub> = s<sub>i</sub> / T<sub>hedef,i</sub> &nbsp;ve&nbsp; Σ ρ<sub>i</sub> ≤ N</span></div>
+    </div>
+
+  </div>
+
+
+  <section id="ortak">
+    <div class="sec-head"><span class="sec-num">05</span><h2 class="sec-title">Her iki ölçekte ortak olanlar</h2></div>
+    <p>Yukarıdaki iki bölümden görüldüğü gibi, ölçek yalnızca <strong>iki noktada</strong> fark yaratır; modelin geri kalanı aynıdır.</p>
+    <table class="ptable">
+      <thead><tr><th>Adım</th><th>Braden</th><th>Cubbin &amp; Jackson</th></tr></thead>
+      <tbody>
+        <tr><td>Risk formülü</td><td>0.55·(23−b)/17 + 0.20V + 0.15Y + 0.10P</td><td>(48 − J/C) / 39</td></tr>
+        <tr><td>Girilen alanlar</td><td>Braden, ventilasyon, yaş, perfüzyon</td><td>yalnızca J/C skoru</td></tr>
+        <tr><td>Yüksek risk eşiği</td><td>b ≤ 18</td><td>J/C ≤ 28</td></tr>
+        <tr><td>Periyot</td><td colspan="2" style="text-align:center;">T<sub>hedef</sub> = 120 + 120·(1 − R) — <strong>aynı</strong></td></tr>
+        <tr><td>Aciliyet / vade</td><td colspan="2" style="text-align:center;">U ve D formülleri — <strong>aynı</strong></td></tr>
+        <tr><td>Erken tetikleme</td><td colspan="2" style="text-align:center;">U ≥ θ veya kritik — <strong>aynı</strong></td></tr>
+        <tr><td>Sıralama</td><td colspan="2" style="text-align:center;">EDF + kısa-iş kırıcı — <strong>aynı</strong></td></tr>
+        <tr><td>Döngü / kararlılık</td><td colspan="2" style="text-align:center;">Pozisyon rotasyonu, Σρ ≤ N — <strong>aynı</strong></td></tr>
+      </tbody>
+    </table>
+    <div class="callout"><span class="tag acc">Özet</span>Ölçek seçimi yalnızca (1) R'nin nasıl hesaplandığını ve (2) yüksek risk eşiğini değiştirir. Periyot, aciliyet, erken tetikleme, sıralama, döngü ve kararlılık her iki ölçekte de tamamen aynı çalışır.</div>
+  </section>
+
+  <section id="sinir">
+    <div class="sec-head"><span class="sec-num">06</span><h2 class="sec-title">Sınırlar ve varsayımlar</h2></div>
+    <table class="ptable">
+      <thead><tr><th>Konu</th><th>Durum</th></tr></thead>
+      <tbody>
+        <tr><td>Katsayılar</td><td>Braden modelindeki ağırlıkların (0.55, 0.20…) göreli sırası literatürle tutarlı, ama kesin değerleri gerekçelendirilmiş tahmindir. Kalibrasyon için uzman paneli veya kendi verinizle regresyon gerekir. J/C tarafında bu sorun yoktur; tek skor kullanılır.</td></tr>
+        <tr><td>Kesim noktaları</td><td>Braden 18 ve J/C 28 doğrudan meta-analizlerden/büyük örneklemli çalışmalardan gelir — modelin en sağlam dayanağı.</td></tr>
+        <tr><td>Doğrusal periyot</td><td>120–240 dk aralığında yeterli ve şeffaf; üst sınır (240 dk) TEAM-UP çalışmasının doğrudan test ettiği kanıta dayanır. Daha karmaşık (hiperbolik) bir form için mevcut kanıt zorlayıcı değil.</td></tr>
+        <tr><td>Statik değerlendirme</td><td>Risk, skor elle güncellendiğinde değişir. Gerçek zamanlı doku sinyali bu modelin kapsamı dışındadır.</td></tr>
+        <tr><td>Popülasyon</td><td>Yetişkin YBÜ için tasarlandı. Pediatrik/yenidoğan YBÜ için Braden QD gibi ölçekler daha uygun olur; bir sonraki geliştirme adımı olarak akılda tutulur.</td></tr>
+        <tr><td>Pozisyon kontrendikasyonu</td><td>Model, sabit bir pozisyon döngüsü varsayar (Sırtüstü→Sağ→Sırtüstü→Sol). Yara, hat/kateter, hemodinamik instabilite gibi nedenlerle bir pozisyonun o hasta için kontrendike olabileceğini şu an ayırt etmez — bu klinik kararı hâlâ hemşire verir.</td></tr>
+        <tr><td>Hemşire kapasitesi</td><td>Her hemşirenin döndürme işine %100 ayrılabildiği varsayılır. İlaç, prosedür, kabul/taburcu gibi rakip görevler modele dahil değildir; gerçek kapasite modelin öngördüğünden daha düşük olabilir.</td></tr>
+        <tr><td>Çok kişili işlemler</td><td>Bir döndürmenin tek hemşire tarafından yapılabildiği varsayılır. Bariatrik veya hemodinamik olarak instabil hastalarda gereken 2 (veya daha fazla) hemşireli işlemler ayrıca modellenmemiştir.</td></tr>
+        <tr><td>ML tabanlı öneri</td><td>"ML önerisini uygula" özelliği tamamen sentetik/simüle edilmiş senaryolardan (gerçek hasta verisi değil) türetilmiştir. Personel veya nöbet kararlarına dayanak yapılmadan önce gerçek birim verisiyle doğrulanmalıdır.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <p class="mono">YBÜ DÖNDÜRME ÖNCELİKLENDİRME MODELİ — MATEMATİKSEL DOKÜMANTASYON</p>
+  <p>Bu doküman, modeli önce baştan sona Braden ölçeğiyle (Bölüm A), sonra baştan sona Cubbin &amp; Jackson ölçeğiyle (Bölüm B) anlatır. Ölçek yalnızca risk hesabını ve yüksek risk eşiğini değiştirir; periyot, aciliyet, sıralama ve döngü her iki durumda da aynıdır. Formüller eşlik eden interaktif simülatörle birebir tutarlıdır.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hibrit Döndürme Önceliklendirme Modeli — Bası Yarası Simülatörü</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#172033; --paper:#f2f4f2; --card:#ffffff; --line:#dde2e4; --muted:#6b7280;
+  --teal:#0f8a7c; --teal-light:#e2f3f1; --teal-text:#0b6d61;
+  --amber:#d97a06; --amber-light:#fdf1e0; --amber-text:#9a5c05;
+  --red:#d1392b; --red-light:#fbe9e7; --red-text:#a52a20; --navy:#1c3d5a;
+  --radius:8px;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:28px 16px 56px;}
+.wrap{max-width:960px;margin:0 auto;}
+.bezel{background:var(--navy);color:#eef3f6;border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.bezel h1{font-size:18px;font-weight:600;margin:0 0 4px;letter-spacing:.2px;}
+.bezel p{margin:0;font-size:12.5px;color:#b9c6cf;}
+.bezel .clock{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;letter-spacing:.5px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.card h2{font-size:12.5px;font-weight:600;margin:0 0 14px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);}
+.controls-row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;}
+.field{flex:1;min-width:150px;}
+.field label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px;}
+.field .val{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+input[type=range]{width:100%;accent-color:var(--teal);}
+.btn{font-family:inherit;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;}
+.btn:hover{border-color:var(--teal);}
+.btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+.btn-primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+.btn-primary:hover{background:#0c766a;}
+.btn-ghost{background:transparent;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.tabs{display:flex;gap:8px;margin-bottom:14px;}
+.tab{font-family:inherit;font-size:13px;padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
+.tab.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+.nurse-row{display:flex;gap:12px;flex-wrap:wrap;}
+.ncard{flex:1;min-width:160px;background:var(--paper);border-radius:10px;padding:12px 14px;}
+.ncard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
+.nname{font-size:13px;font-weight:600;}
+.ncard-sub{font-size:11.5px;color:var(--muted);margin-top:6px;}
+.queue{display:flex;flex-direction:column;gap:10px;}
+.pcard{border:1px solid var(--line);border-radius:10px;padding:14px 16px;transition:border-color .3s;}
+.pcard.overdue{border-color:var(--red);animation:pulseAlert 1.6s ease-in-out infinite;}
+.pcard.critical{border-color:var(--red);border-width:2px;background:linear-gradient(0deg,var(--red-light),#fff 60%);}
+@keyframes pulseAlert{0%,100%{box-shadow:0 0 0 0 rgba(209,57,43,.28);}50%{box-shadow:0 0 0 7px rgba(209,57,43,0);}}
+@media(prefers-reduced-motion:reduce){.pcard.overdue{animation:none;}}
+.pcard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;}
+.pname{font-size:14px;font-weight:600;}
+.pname .rank{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:500;margin-left:6px;}
+.risk-line{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'IBM Plex Mono',monospace;}
+.risk-chip{background:var(--paper);border-radius:12px;padding:2px 8px;}
+.pcard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px 16px;align-items:end;margin-bottom:10px;font-size:12px;}
+.fld{color:var(--muted);display:flex;flex-direction:column;gap:4px;}
+.fld select,.pnum{padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fff;}
+.pnum{width:64px;}
+.badge{font-size:10.5px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.badge-teal{background:var(--teal-light);color:var(--teal-text);}
+.badge-amber{background:var(--amber-light);color:var(--amber-text);}
+.badge-red{background:var(--red-light);color:var(--red-text);}
+.badge-gray{background:#eceeec;color:var(--muted);}
+.gauge-track{position:relative;height:10px;border-radius:6px;background:#e7eae9;overflow:hidden;}
+.gauge-fill{position:absolute;left:0;top:0;height:100%;border-radius:6px;transition:width .3s ease,background .3s ease;}
+.gauge-tick{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);opacity:.35;}
+.gauge-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;font-family:'IBM Plex Mono',monospace;}
+.pos-row{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+.pos-block{display:flex;flex-direction:column;gap:2px;}
+.pos-block .lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.pos-block .val{font-size:13px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.pos-arrow{color:var(--teal);font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;}
+.pcard-action{margin-top:10px;}
+.confirm-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.alert-banner{background:var(--amber-light);color:var(--amber-text);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px;}
+.alert-banner.crit{background:var(--red-light);color:var(--red-text);}
+.log-item{font-size:12px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:16px;}
+.stat{background:var(--paper);border-radius:10px;padding:14px;}
+.stat .lbl{font-size:12px;color:var(--muted);margin-bottom:4px;}
+.stat .num{font-size:24px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+.chart-box{position:relative;height:280px;margin-top:6px;}
+.progress-outer{height:6px;background:var(--paper);border-radius:4px;overflow:hidden;margin-top:10px;}
+.progress-inner{height:100%;background:var(--teal);transition:width .07s linear;}
+.formula{font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.85;color:var(--ink);background:var(--paper);border-radius:10px;padding:14px 16px;white-space:pre-wrap;overflow-x:auto;}
+.footnote{font-size:11.5px;color:var(--muted);margin-top:10px;}
+@media(max-width:560px){.bezel{flex-direction:column;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bezel">
+    <div>
+      <h1>Hibrit döndürme önceliklendirme modeli</h1>
+      <p>Zengin risk skoru → dinamik periyot → EDF sıralama + erken tetikleme</p>
+    </div>
+    <div class="clock" id="clockOut">Gün 1, 00:00</div>
+  </div>
+
+  <div class="card">
+    <h2>Kurulum</h2>
+    <div class="controls-row">
+      <div class="field">
+        <label>Risk ölçeği</label>
+        <select id="scaleSelect" style="width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;">
+          <option value="braden" selected>Braden (+ ek ICU faktörleri)</option>
+          <option value="jc">Cubbin & Jackson (ICU'ya özel)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Hemşire sayısı: <span class="val" id="nurseCountOut">2</span></label>
+        <input type="range" id="nurseCount" min="1" max="6" step="1" value="2">
+      </div>
+      <div class="field">
+        <label>Hasta sayısı: <span class="val" id="patientCountOut">5</span></label>
+        <input type="range" id="patientCount" min="3" max="100" step="1" value="5">
+      </div>
+      <div class="field">
+        <label>Erken tetikleme eşiği: <span class="val" id="triggerOut">0.80</span></label>
+        <input type="range" id="triggerSlider" min="0.1" max="1" step="0.01" value="0.8">
+      </div>
+      <div class="field">
+        <label>Look-ahead penceresi: <span class="val" id="lookaheadOut">60</span> dk</label>
+        <input type="range" id="lookaheadSlider" min="0" max="120" step="15" value="60">
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="regenBtn">Hastaları yeniden oluştur</button>
+        <button class="btn" id="resetBtn">Zamanı sıfırla</button>
+        <button class="btn btn-primary" id="mlBtn">ML önerisini uygula</button>
+      </div>
+    </div>
+    <div class="footnote">Risk skoru periyodu (hedef süreyi) belirler; sıralama saf EDF'tir, risk sıralamada ikinci kez sayılmaz. Erken tetikleme: aciliyeti eşiğe ulaşan hasta boş hemşire varsa vadesi dolmadan işleme alınabilir. Kritik sınırı aşan hasta mutlak öncelik alır.</div>
+    <div id="mlNote" class="footnote" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Hemşireler</h2>
+    <div class="nurse-row" id="nursesPanel"></div>
+  </div>
+
+  <div class="card">
+    <h2>Öncelik kuyruğu</h2>
+    <div class="queue" id="queuePanel"></div>
+    <div class="footnote">Her kartta toplam risk, valide kesim noktasına göre yüksek risk durumu ve türetilen hedef süre görünür. Braden ≤18 veya J/C ≤28 olan hastalar literatürde "yüksek risk" kabul edilir; bu hastalarda tolerans süresi yarıya iner, yani daha erken kritik olurlar. Çubuktaki koyu çizgi = vade (%100), amber çizgi = erken tetikleme eşiği.</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" id="modeStepBtn">Adım adım</button>
+      <button class="tab" id="modeAutoBtn">Otomatik</button>
+    </div>
+    <div id="stepPanel"></div>
+    <div id="autoPanel" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Aciliyet izleme grafiği</h2>
+    <div class="chart-box"><canvas id="urgencyChart"></canvas></div>
+    <div class="footnote" id="chartNote"></div>
+  </div>
+
+  <div class="card" id="overdueCard" style="display:none;">
+    <h2>Otomatik koşu sonucu — hasta başına gecikme</h2>
+    <div class="chart-box"><canvas id="overdueChart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h2>Model</h2>
+    <div class="formula">RİSK KATMANI (periyodu belirler) — seçili ölçeğe göre
+
+  ► BRADEN seçiliyse:
+    Braden riski = (23 − Braden) / 17          [Braden bütün skor]
+    Toplam risk  = 0.55·Braden riski + 0.20·ventilasyon
+                 + 0.15·yaş + 0.10·perfüzyon
+    (immobilite/beslenme/nem/hareket YOK — zaten Braden'in içinde.
+     Geçen süre de ayrı terim değil; aciliyet oranında temsil ediliyor.)
+
+  ► CUBBIN & JACKSON seçiliyse:
+    Toplam risk = (48 − J/C skoru) / 39         [J/C 9–48, düşük=yüksek risk]
+    Ek faktör YOK — J/C zaten yaş, solunum, oksijen gereksinimi,
+    hemodinami gibi ICU faktörlerini içeren, ICU'ya özel valide skor.
+
+PERİYOT (hedef süre)
+  T_hedef = 120 + 120·(1 − toplam risk)     → 120–240 dk
+  (üst sınır TEAM-UP çalışmasının doğrudan test ettiği ve güvenli
+   bulduğu 4 saate göre ayarlandı; önceki 180 dk sınırı gereğinden
+   muhafazakârdı ve risk farklılaşmasını 1.5 kata sıkıştırıyordu)
+
+VADE VE ACİLİYET
+  U = (t − t_son) / T_hedef
+  D = (1 − U) · T_hedef                       vadeye kalan (dk)
+
+UYGUNLUK (erken tetikleme)
+  Boş hemşireye yalnızca U ≥ eşik (vars. 0.8) olan hasta atanır.
+
+KRİTİK SINIR
+  tolerans = 20 − 10·toplam risk
+  YÜKSEK RİSK (valide kesim noktası) ise tolerans × 0.5
+    Braden ≤ 18  → yüksek risk (meta-analiz optimal kesim değeri)
+    J/C    ≤ 28  → yüksek risk (n=6203 çok merkezli çalışmada bulunan optimal kesim)
+  kritik sınır = T_hedef + tolerans
+  (t − t_son) ≥ kritik sınır → hasta KRİTİK, mutlak öncelik
+
+SIRALAMA (saf EDF + kısa-iş kırıcı)
+  Önce kritik hastalar (aralarında EDF).
+  Sonra EDF: vadesi en yakın (en küçük D) önde; gecikmiş hep önde.
+  Yalnızca iki hasta da zamanında (D>0) ve look-ahead penceresinde
+  ise kısa işlem süresi öne alınır. Risk burada YOK (çift sayım yok).
+
+AĞIRLIK GEREKÇELERİ (Braden ölçeği için, ICU literatürü)
+  Braden 0.55: ICU dahil en güçlü tek belirleyici, valide (AUC~0.82).
+  Ventilasyon 0.20: bağımsız risk faktörü, yüksek OR; Braden'de yok.
+  Yaş 0.15: tutarlı bağımsız faktör; Braden yaşı hesaba katmaz.
+  Perfüzyon 0.10: bağımsız ama etkisi tartışmalı → en düşük ağırlık.
+  J/C ölçeğinde ek ağırlık yok — skor bütünsel ve ICU'ya özel
+  (karşılaştırmalı çalışmalarda AUC~0.86, Braden'den üstün).
+
+ML TABANLI ERKEN TETİKLEME ÖNERİSİ ("ML önerisini uygula" butonu)
+  3600 senaryo (θ:0.1–1.0, hemşire:1–8, hasta:6–24, işlem süresi 4–8dk,
+  6 tohum) simüle edildi; RandomForest ile gecikme sayısı tahmin edildi
+  (5 katlı CV R²=0.998). Özellik önemi: θ (0.72) baskın; yük oranı
+  (0.15) ve hasta sayısı (0.13) ikincil; look-ahead ihmal edilebilir (0.01).
+  Yük oranı ≤ 5    → θ ≈ 0.95 (minimum müdahale yeterli)
+  Yük oranı 5 – 16  → θ izotonik eğriyle 0.95'ten 0.45'e düşer
+  Yük oranı > 16    → hiçbir θ gecikmeyi sıfırlayamaz (kapasite sınırı,
+                       Σρ ≤ N kararlılık koşuluyla tutarlı)
+  Look-ahead sabit ~30 dk önerilir; yalnızca işlem süreleri çok
+  değişkense (bazı hasta çok kısa/uzun) daha yüksek değer fayda sağlar.
+
+  GÜVENLİK KONTROLÜ — düşük θ (örn. 0.5) kritik hastayı geciktirir mi?
+  Hayır. Ayrı bir deneyle "kritik hasta bekliyor ama tüm hemşireler
+  meşgul" anları ayrıca sayıldı: bu durum neredeyse yalnızca YÜKSEK θ
+  (0.9–1.0) ve zaten aşırı yüklü senaryolarda görülüyor — çünkü yüksek θ
+  reaktif kalıp bir gecikme birikimi oluşturuyor. Düşük θ bu birikimin
+  oluşmasını baştan engelliyor, kritik hastayı hiçbir zaman geciktirmiyor.
+  Tek gerçek bedeli: hemşirelerin gereksiz yere daha fazla toplam iş
+  yapması (kullanım oranı θ=0.3'te θ=1.0'a göre yaklaşık 3 kat daha
+  yüksek) — bu yüzden "en düşük θ" değil, "gecikmeyi sıfırlayan en
+  YÜKSEK θ" hedeflendi: hem güvenli hem gereksiz işten kaçınan denge.</div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function(){
+  var POSITIONS = ['Sırtüstü','Sağ lateral','Sırtüstü','Sol lateral'];
+  var palette = ['#2563eb','#7c3aed','#059669','#ea580c','#db2777','#0891b2','#65a30d','#9333ea','#e11d48','#0d9488'];
+
+  // ---- RISK MODEL ----
+  // İki ölçek destekleniyor: 'braden' ve 'jc' (Cubbin & Jackson).
+  // Braden: bütün skor baskın + Braden'de olmayan ek faktörler.
+  // J/C: 9–48 arası, ICU'ya özel, yaş/solunum/hemodinami zaten içinde → tek skor, ek faktör yok.
+  function bradenRisk(b){ return (23 - b) / 17; }
+  function bradenClinicalRisk(p){
+    return 0.55*bradenRisk(p.braden)
+         + 0.20*p.ventilation
+         + 0.15*p.ageRisk
+         + 0.10*p.perfusion;
+  }
+  function jcRisk(p){ return (48 - p.jc) / 39; }   // 9–48, düşük = yüksek risk
+  function clinicalRisk(p){
+    return state.scale==='jc' ? jcRisk(p) : bradenClinicalRisk(p);
+  }
+  // Literatürde valide edilmiş "yüksek risk" kesim noktaları:
+  //  - Braden ≤ 18 (meta-analizde optimal kesim değeri)
+  //  - Cubbin & Jackson ≤ 28 (n=6203 çok merkezli çalışmada bulunan optimal kesim değeri)
+  function highRiskCutoff(){ return state.scale==='jc' ? 28 : 18; }
+  function rawScore(p){ return state.scale==='jc' ? p.jc : p.braden; }
+  function isHighRisk(p){ return rawScore(p) <= highRiskCutoff(); }
+  function totalRisk(p, now){ return clinicalRisk(p); }
+  function targetTime(p, now){ return 120 + 120*(1 - totalRisk(p, now)); }   // minutes, 120-240
+  function urgencyRatio(p, now){ return (now - p.lastTurn) / targetTime(p, now); }
+  function minutesToDeadline(p, now){ return (1 - urgencyRatio(p, now)) * targetTime(p, now); }
+  function tolerance(p, now){
+    var base = 20 - 10*totalRisk(p, now);
+    // Valide kesim noktasının altındaki (yüksek risk) hastalarda tolerans
+    // ek olarak yarıya iner — literatür bu grup için daha agresif önlem önerir.
+    return isHighRisk(p) ? base*0.5 : base;
+  }
+  function criticalLimit(p, now){ return targetTime(p, now) + tolerance(p, now); }
+  function isCritical(p, now){ return (now - p.lastTurn) >= criticalLimit(p, now); }
+
+  function comparePriority(a, b, now){
+    var ca = isCritical(a, now), cb = isCritical(b, now);
+    if(ca !== cb) return ca ? -1 : 1;              // critical patients first
+    var da = minutesToDeadline(a, now);
+    var db = minutesToDeadline(b, now);
+    var bothOnTime = da > 0 && db > 0;
+    var bothInWindow = da <= state.lookahead && db <= state.lookahead;
+    if(bothOnTime && bothInWindow){
+      if(a.serviceTime !== b.serviceTime) return a.serviceTime - b.serviceTime;
+      return da - db;
+    }
+    return da - db;
+  }
+
+  function riskLabelText(r){
+    if(r>=0.66) return 'yüksek';
+    if(r>=0.33) return 'orta';
+    return 'düşük';
+  }
+
+  // ---- Log kalıcılığı ----
+  // Tarayıcı yenilendiğinde işlem geçmişi kaybolmasın diye son 50 kayıt localStorage'a yazılır.
+  var LOG_STORAGE_KEY = 'basiyarasi_log_v1';
+  function loadPersistedLog(){
+    try{ var raw=localStorage.getItem(LOG_STORAGE_KEY); return raw?JSON.parse(raw):[]; }
+    catch(e){ return []; }
+  }
+  function savePersistedLog(log){
+    try{ localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(log.slice(0,50))); }
+    catch(e){ /* localStorage kullanılamıyorsa sessizce yoksay */ }
+  }
+
+  var state = {
+    numNurses: 2, patientCountTarget: 5, patients: [], nurses: [],
+    clock: 0, mode: 'step', log: loadPersistedLog(), uiConfirm: null, history: [],
+    trigger: 0.8, lookahead: 60, scale: 'braden',
+    auto: { running:false, durationH:24, intervalId:null, ticksDone:0, ticksTotal:150, stats:null }
+  };
+
+  function lvl(){ var r=Math.random(); return r<0.4?0 : (r<0.75?0.5:1); }
+  function ageLvl(){ var r=Math.random(); return r<0.4?0 : (r<0.65?0.3 : (r<0.85?0.6:1)); }
+  function randPatients(n){
+    var arr=[];
+    for(var i=0;i<n;i++){
+      arr.push({
+        id:'p'+i, name:'Hasta '+(i+1),
+        braden: 6+Math.floor(Math.random()*18),
+        jc: 9+Math.floor(Math.random()*40),
+        ventilation: Math.random()<0.4?1:0,
+        ageRisk: ageLvl(),
+        perfusion: lvl(),
+        serviceTime: 4+Math.floor(Math.random()*5),
+        lastTurn:0, status:'waiting', posIndex:0, criticalHits:0, wasCritical:false
+      });
+    }
+    return arr;
+  }
+  function initNurses(n){
+    var arr=[];
+    for(var i=0;i<n;i++) arr.push({id:'n'+i, name:'Hemşire '+(i+1), busy:false, busyUntil:0, patientId:null, totalMinutes:0, totalPatients:0});
+    return arr;
+  }
+  state.patients = randPatients(state.patientCountTarget);
+  state.nurses = initNurses(state.numNurses);
+
+  function findPatient(id){ return state.patients.find(function(p){return p.id===id;}); }
+  function pad(n){ return String(n).length<2 ? '0'+n : ''+n; }
+  function fmtClock(min){
+    var day=Math.floor(min/1440)+1, hh=Math.floor((min%1440)/60), mm=Math.floor(min%60);
+    return 'Gün '+day+', '+pad(hh)+':'+pad(mm);
+  }
+
+  function recordHistory(){
+    var vals={};
+    state.patients.forEach(function(p){ vals[p.id]=Math.round(urgencyRatio(p,state.clock)*1000)/10; });
+    state.history.push({t: Math.round(state.clock/6)/10, values:vals});
+    if(state.history.length>500) state.history.shift();
+  }
+
+  function freeDueNurses(){
+    state.nurses.forEach(function(n){
+      if(n.busy && state.clock>=n.busyUntil){
+        n.busy=false;
+        var p=findPatient(n.patientId);
+        if(p && p.status==='in-progress') p.status='waiting';
+        n.patientId=null;
+      }
+    });
+  }
+
+  function assignFreeNurses(mode){
+    var waiting = state.patients.filter(function(p){
+      return p.status==='waiting' && (urgencyRatio(p, state.clock) >= state.trigger || isCritical(p, state.clock));
+    });
+    waiting.sort(function(a,b){return comparePriority(a,b,state.clock);});
+    state.nurses.forEach(function(n){
+      if(!n.busy && !n.patientId && waiting.length){
+        var p = waiting.shift();
+        if(mode==='auto'){
+          var ur = urgencyRatio(p, state.clock);
+          if(ur>=1){
+            state.auto.stats.overdueEvents++;
+            state.auto.stats.perPatient[p.id]=(state.auto.stats.perPatient[p.id]||0)+1;
+          }
+          state.auto.stats.assignments++;
+          state.auto.stats.urgencySum += ur;
+          state.auto.stats.busyMinutes += p.serviceTime;
+          p.lastTurn = state.clock;
+          p.status='in-progress';
+          p.posIndex = (p.posIndex+1)%4;
+          n.busy=true; n.patientId=p.id; n.busyUntil=state.clock+p.serviceTime;
+          n.totalMinutes=(n.totalMinutes||0)+p.serviceTime; n.totalPatients=(n.totalPatients||0)+1;
+        } else {
+          n.patientId=p.id;
+          p.status='pending-action';
+        }
+      }
+    });
+  }
+
+  function confirmAction(pid, newScore){
+    var p=findPatient(pid);
+    var n=state.nurses.find(function(nn){return nn.patientId===pid;});
+    if(!p||!n) return;
+    var ur=urgencyRatio(p, state.clock);
+    var oldPos=POSITIONS[p.posIndex];
+    p.posIndex=(p.posIndex+1)%4;
+    var newPos=POSITIONS[p.posIndex];
+    if(state.scale==='jc'){
+      state.log.unshift({t:state.clock, msg:p.name+': J/C '+p.jc+' → '+newScore+' · '+oldPos+' → '+newPos+' (aciliyet %'+Math.round(ur*100)+')'});
+      p.jc = Math.max(9, Math.min(48, newScore));
+    } else {
+      state.log.unshift({t:state.clock, msg:p.name+': Braden '+p.braden+' → '+newScore+' · '+oldPos+' → '+newPos+' (aciliyet %'+Math.round(ur*100)+')'});
+      p.braden = Math.max(6, Math.min(23, newScore));
+    }
+    if(state.log.length>12) state.log.length=12;
+    savePersistedLog(state.log);
+    p.lastTurn = state.clock;
+    p.status='in-progress';
+    n.busy=true; n.busyUntil=state.clock+p.serviceTime;
+    n.totalMinutes=(n.totalMinutes||0)+p.serviceTime; n.totalPatients=(n.totalPatients||0)+1;
+    state.uiConfirm=null;
+    recordHistory();
+    render();
+  }
+  function cancelAction(pid){
+    var p=findPatient(pid);
+    var n=state.nurses.find(function(nn){return nn.patientId===pid;});
+    if(p) p.status='waiting';
+    if(n) n.patientId=null;
+    state.uiConfirm=null;
+    render();
+  }
+  // Bir hastanın kritik sınırı her yeniden aştığı an (önceki turdan bu yana ilk kez) sayaç bir artar —
+  // adım-adım ve otomatik modda canlı, kalıcı bir "kaç kez kritik oldu" göstergesi sağlar.
+  function updateCriticalHits(){
+    state.patients.forEach(function(p){
+      var crit = isCritical(p, state.clock);
+      if(crit && !p.wasCritical) p.criticalHits = (p.criticalHits||0)+1;
+      p.wasCritical = crit;
+    });
+  }
+
+  function stepAdvance(dt){ state.clock+=dt; freeDueNurses(); updateCriticalHits(); assignFreeNurses('step'); recordHistory(); render(); }
+
+  function autoStart(){
+    state.auto.running=true; state.auto.ticksDone=0;
+    state.auto.stats={overdueEvents:0, assignments:0, urgencySum:0, busyMinutes:0, perPatient:{}};
+    document.getElementById('overdueCard').style.display='none';
+    var durationMin=state.auto.durationH*60, dtPerTick=durationMin/state.auto.ticksTotal;
+    state.auto.intervalId=setInterval(function(){
+      state.clock+=dtPerTick; freeDueNurses(); updateCriticalHits(); assignFreeNurses('auto'); recordHistory();
+      state.auto.ticksDone++;
+      if(state.auto.ticksDone>=state.auto.ticksTotal){ clearInterval(state.auto.intervalId); state.auto.running=false; }
+      render();
+    }, 70);
+    render();
+  }
+  function autoStop(){ if(state.auto.intervalId) clearInterval(state.auto.intervalId); state.auto.running=false; render(); }
+
+  function resetClock(){
+    if(state.auto.intervalId) clearInterval(state.auto.intervalId);
+    state.clock=0;
+    state.nurses.forEach(function(n){n.busy=false; n.busyUntil=0; n.patientId=null; n.totalMinutes=0; n.totalPatients=0;});
+    state.patients.forEach(function(p){p.lastTurn=0; p.status='waiting'; p.posIndex=0; p.criticalHits=0; p.wasCritical=false;});
+    state.log=[]; savePersistedLog(state.log); state.uiConfirm=null; state.auto.running=false; state.auto.stats=null; state.history=[];
+    document.getElementById('overdueCard').style.display='none';
+    recordHistory(); render();
+  }
+  // ---- ML-tabanlı erken tetikleme önerisi ----
+  // 3600 satırlık simülasyon taramasından (theta 0.1-1.0, N=1-8, hasta=6-24, işlem süresi 4-8dk,
+  // 6 tohum) eğitilen RandomForest modelinin ürettiği "gecikmeyi sıfırlayan en yüksek theta"
+  // eğrisinin izotonik (monoton azalan) regresyonla sadeleştirilmiş kontrol noktaları.
+  // NOT: işlem süresi 8-25dk'dan 4-8dk'ya düşürüldüğünde tarama yeniden yapıldı; kapasite
+  // sınırı yük oranı ~7'den ~16'ya yükseldi (kısa işlemler çok daha fazla hasta kaldırıyor).
+  var ML_THETA_POINTS = [
+    [0.75,0.95],[5,0.95],[5.5,0.945],[6,0.932],[7,0.932],[7.5,0.875],
+    [8,0.817],[9,0.817],[9.5,0.784],[10,0.75],[11,0.70],[12,0.65],
+    [14,0.65],[14.5,0.60],[15,0.55],[15.5,0.50],[16,0.45]
+  ];
+  var ML_CAPACITY_LIMIT = 16;   // bu yük oranının üzerinde hiçbir theta gecikmeyi sıfırlayamıyor
+  var ML_LOOKAHEAD_DEFAULT = 30; // look-ahead'in etkisi ihmal edilebilir düzeyde (özellik önemi ~0.01)
+
+  function mlRecommendTheta(loadRatio){
+    var pts = ML_THETA_POINTS;
+    if(loadRatio <= pts[0][0]) return pts[0][1];
+    if(loadRatio >= pts[pts.length-1][0]) return pts[pts.length-1][1];
+    for(var i=0;i<pts.length-1;i++){
+      var a=pts[i], b=pts[i+1];
+      if(loadRatio>=a[0] && loadRatio<=b[0]){
+        var t=(loadRatio-a[0])/(b[0]-a[0]);
+        return a[1] + t*(b[1]-a[1]);
+      }
+    }
+    return pts[pts.length-1][1];
+  }
+
+  function applyMLRecommendation(){
+    var loadRatio = state.patients.length / state.numNurses;
+    var recTheta = Math.round(mlRecommendTheta(loadRatio)*100)/100;
+    state.trigger = recTheta;
+    state.lookahead = ML_LOOKAHEAD_DEFAULT;
+    document.getElementById('triggerSlider').value = recTheta;
+    document.getElementById('triggerOut').textContent = recTheta.toFixed(2);
+    document.getElementById('lookaheadSlider').value = ML_LOOKAHEAD_DEFAULT;
+    document.getElementById('lookaheadOut').textContent = ML_LOOKAHEAD_DEFAULT;
+    var note = document.getElementById('mlNote');
+    note.style.display = 'block';
+    var disclaimer = ' <strong>⚠ Deneysel:</strong> bu öneri tamamen sentetik/simüle senaryolardan türetildi, gerçek hasta verisiyle doğrulanmadı — personel/nöbet kararına tek başına dayanak yapılmamalıdır.';
+    if(loadRatio > ML_CAPACITY_LIMIT){
+      note.innerHTML = '<strong>ML önerisi:</strong> yük oranı (hasta/hemşire = '+loadRatio.toFixed(1)+') kapasite sınırının (~'+ML_CAPACITY_LIMIT+') üzerinde — hiçbir eşik gecikmeyi sıfırlayamaz. Önerilen θ='+recTheta.toFixed(2)+' en iyi ulaşılabilir noktadır, ama asıl çözüm hemşire sayısını artırmaktır.'+disclaimer;
+    } else {
+      note.innerHTML = '<strong>ML önerisi:</strong> yük oranı (hasta/hemşire = '+loadRatio.toFixed(1)+') için θ='+recTheta.toFixed(2)+', look-ahead='+ML_LOOKAHEAD_DEFAULT+' dk uygulandı — 3600 senaryoluk simülasyon taramasından eğitilen modele göre gecikmeyi sıfırlayan en az müdahaleci ayar.'+disclaimer;
+    }
+    render();
+  }
+
+  function regenPatients(){ state.patients=randPatients(state.patientCountTarget); resetClock(); }
+
+  function workloadLine(n){
+    return '<div class="ncard-sub" style="opacity:.75;">Oturum: '+(n.totalPatients||0)+' hasta · '+(n.totalMinutes||0)+' dk</div>';
+  }
+  function renderNurses(){
+    var el=document.getElementById('nursesPanel');
+    el.innerHTML = state.nurses.map(function(n){
+      if(n.busy){
+        var p=findPatient(n.patientId); var st=p?p.serviceTime:1;
+        var frac=Math.max(0,Math.min(1,(state.clock-(n.busyUntil-st))/st));
+        var left=Math.max(0,Math.round(n.busyUntil-state.clock));
+        return '<div class="ncard"><div class="ncard-top"><span class="nname">'+n.name+'</span><span class="badge badge-teal">Meşgul</span></div>'+
+          '<div class="gauge-track"><div class="gauge-fill" style="width:'+Math.round(frac*100)+'%;background:var(--teal);"></div></div>'+
+          '<div class="ncard-sub">'+(p?p.name:'')+' · '+left+' dk kaldı</div>'+workloadLine(n)+'</div>';
+      } else if(n.patientId){
+        var p2=findPatient(n.patientId);
+        return '<div class="ncard"><div class="ncard-top"><span class="nname">'+n.name+'</span><span class="badge badge-amber">Aksiyon bekliyor</span></div>'+
+          '<div class="gauge-track"><div class="gauge-fill" style="width:0%;"></div></div>'+
+          '<div class="ncard-sub">Sırada: '+(p2?p2.name:'')+'</div>'+workloadLine(n)+'</div>';
+      }
+      return '<div class="ncard"><div class="ncard-top"><span class="nname">'+n.name+'</span><span class="badge badge-gray">Boşta</span></div>'+
+        '<div class="gauge-track"><div class="gauge-fill" style="width:0%;"></div></div><div class="ncard-sub">Hazır</div>'+workloadLine(n)+'</div>';
+    }).join('');
+  }
+
+  function selOptions(val){
+    var opts=[['0','düşük'],['0.5','orta'],['1','yüksek']];
+    return opts.map(function(o){ return '<option value="'+o[0]+'"'+(parseFloat(o[0])===val?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+  }
+  function ageOptions(val){
+    var opts=[['0','<50 (0)'],['0.3','50–64'],['0.6','65–79'],['1','≥80']];
+    return opts.map(function(o){ return '<option value="'+o[0]+'"'+(parseFloat(o[0])===val?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+  }
+
+  function renderQueue(){
+    var now=state.clock;
+    var rows=state.patients.slice().sort(function(a,b){return comparePriority(a,b,now);});
+    var el=document.getElementById('queuePanel');
+    el.innerHTML=rows.map(function(p, idx){
+      var cr=clinicalRisk(p), tr=totalRisk(p,now);
+      var tt=targetTime(p,now), ur=urgencyRatio(p,now), mtd=minutesToDeadline(p,now);
+      var crit=isCritical(p,now), elapsed=now-p.lastTurn;
+      var eligible = ur>=state.trigger || crit;
+      var trackMax=1.3, fillPct=Math.min(ur,trackMax)/trackMax*100;
+      var tickPct=(1/trackMax)*100, triggerPct=(state.trigger/trackMax)*100;
+      var fillColor = ur>=1?'var(--red)':(ur>=0.75?'var(--amber)':'var(--teal)');
+      var cls='pcard'+(crit?' critical':(ur>=1?' overdue':''));
+      var badge;
+      if(p.status==='in-progress') badge='<span class="badge badge-teal">İşlemde</span>';
+      else if(p.status==='pending-action') badge='<span class="badge badge-amber">Sırası geldi</span>';
+      else if(crit) badge='<span class="badge badge-red">KRİTİK</span>';
+      else if(ur>=1) badge='<span class="badge badge-red">Gecikti</span>';
+      else if(eligible) badge='<span class="badge badge-amber">Uygun</span>';
+      else badge='<span class="badge badge-gray">Erken</span>';
+      var action='';
+      if(p.status==='pending-action'){
+        if(state.uiConfirm===p.id){
+          action='<div class="confirm-row">'+(state.scale==='jc'
+              ? '<span style="font-size:12px;color:var(--muted);">Yeni J/C:</span><input type="number" min="9" max="48" value="'+p.jc+'" id="bIn-'+p.id+'" class="pnum" aria-label="Yeni J/C skoru">'
+              : '<span style="font-size:12px;color:var(--muted);">Yeni Braden:</span><input type="number" min="6" max="23" value="'+p.braden+'" id="bIn-'+p.id+'" class="pnum" aria-label="Yeni Braden skoru">')+
+            '<button class="btn btn-primary" data-action="confirm" data-id="'+p.id+'">Onayla</button>'+
+            '<button class="btn btn-ghost" data-action="cancel" data-id="'+p.id+'">İptal</button></div>';
+        } else {
+          action='<button class="btn btn-primary" data-action="start" data-id="'+p.id+'">İşlem yap</button>';
+        }
+      }
+      return '<div class="'+cls+'" data-id="'+p.id+'">'+
+        '<div class="pcard-top"><span class="pname">'+p.name+'<span class="rank">sıra #'+(idx+1)+'</span></span>'+badge+'</div>'+
+        '<div class="risk-line">'+
+          '<span class="risk-chip">'+(state.scale==='jc'?'J/C':'Braden')+' toplam risk '+tr.toFixed(2)+' ('+riskLabelText(tr)+')</span>'+
+          '<span class="risk-chip" style="'+(isHighRisk(p)?'background:var(--red-light);color:var(--red-text);':'')+'">'+(state.scale==='jc'?'J/C':'Braden')+' '+rawScore(p)+' '+(isHighRisk(p)?'≤':'>')+' '+highRiskCutoff()+(isHighRisk(p)?' · yüksek risk':' · eşik üstü')+'</span>'+
+          '<span class="risk-chip">hedef '+Math.round(tt)+' dk</span>'+
+          (p.criticalHits>0?'<span class="risk-chip" style="background:var(--red-light);color:var(--red-text);">kritik geçmişi: '+p.criticalHits+'</span>':'')+
+        '</div>'+
+        '<div class="pcard-grid">'+
+          (state.scale==='jc'
+            ? '<label class="fld">J/C skoru<input type="number" min="9" max="48" value="'+p.jc+'" data-field="jc" data-id="'+p.id+'" class="pnum"></label>'
+            : '<label class="fld">Braden<input type="number" min="6" max="23" value="'+p.braden+'" data-field="braden" data-id="'+p.id+'" class="pnum"></label>'+
+              '<label class="fld">Ventilasyon<select data-field="ventilation" data-id="'+p.id+'"><option value="0"'+(p.ventilation===0?' selected':'')+'>hayır</option><option value="1"'+(p.ventilation===1?' selected':'')+'>evet</option></select></label>'+
+              '<label class="fld">Yaş riski<select data-field="ageRisk" data-id="'+p.id+'">'+ageOptions(p.ageRisk)+'</select></label>'+
+              '<label class="fld">Perfüzyon<select data-field="perfusion" data-id="'+p.id+'">'+selOptions(p.perfusion)+'</select></label>')+
+          '<label class="fld">İşlem sr.<input type="number" min="3" max="60" value="'+p.serviceTime+'" data-field="serviceTime" data-id="'+p.id+'" class="pnum"> dk</label>'+
+        '</div>'+
+        '<div class="gauge-track"><div class="gauge-fill" style="width:'+fillPct+'%;background:'+fillColor+';"></div>'+
+          '<div class="gauge-tick" style="left:'+triggerPct+'%;background:var(--amber);opacity:.7;"></div>'+
+          '<div class="gauge-tick" style="left:'+tickPct+'%;"></div></div>'+
+        '<div class="gauge-labels"><span>'+(elapsed/60).toFixed(1)+' sa / '+Math.round(tt)+' dk · vade '+(mtd>0?Math.round(mtd)+' dk':'geçti')+'</span><span>%'+Math.round(ur*100)+'</span></div>'+
+        '<div class="pos-row"><div class="pos-block"><span class="lbl">şu anki</span><span class="val">'+POSITIONS[p.posIndex]+'</span></div>'+
+          '<span class="pos-arrow">›››</span>'+
+          '<div class="pos-block"><span class="lbl">sonraki adım</span><span class="val">'+POSITIONS[(p.posIndex+1)%4]+'</span></div></div>'+
+        (action?'<div class="pcard-action">'+action+'</div>':'')+
+      '</div>';
+    }).join('');
+  }
+
+  function renderStepPanel(){
+    var el=document.getElementById('stepPanel');
+    var pending=state.patients.filter(function(p){return p.status==='pending-action';});
+    var banner=pending.map(function(p){
+      var n=state.nurses.find(function(nn){return nn.patientId===p.id;});
+      var ur=urgencyRatio(p,state.clock), crit=isCritical(p,state.clock);
+      return '<div class="alert-banner'+(crit?' crit':'')+'">'+(n?n.name:'')+' boşta → '+(crit?'KRİTİK ':'')+'sırada '+p.name+' (aciliyet %'+Math.round(ur*100)+')</div>';
+    }).join('');
+    var logHtml=state.log.map(function(l){return '<div class="log-item">'+fmtClock(l.t)+' — '+l.msg+'</div>';}).join('') || '<div class="log-item" style="border:none;">Henüz işlem yapılmadı.</div>';
+    el.innerHTML='<div class="btn-row" style="margin-bottom:14px;">'+
+        '<button class="btn" data-action="adv15">+15 dk</button>'+
+        '<button class="btn" data-action="adv30">+30 dk</button>'+
+        '<button class="btn" data-action="adv60">+1 saat</button></div>'+
+      banner+'<div style="margin-top:6px;"><div style="font-size:12.5px;color:var(--muted);margin-bottom:6px;">İşlem geçmişi</div>'+logHtml+'</div>';
+  }
+
+  function renderAutoPanel(){
+    var el=document.getElementById('autoPanel'); var s=state.auto.stats;
+    var progressPct=state.auto.running?Math.round(state.auto.ticksDone/state.auto.ticksTotal*100):(s?100:0);
+    var statsHtml='';
+    if(s){
+      var avgUr=s.assignments?Math.round(s.urgencySum/s.assignments*100):0;
+      var util=Math.round(s.busyMinutes/(state.numNurses*state.auto.durationH*60)*100);
+      statsHtml='<div class="stats-grid">'+
+        '<div class="stat"><div class="lbl">Gecikme sayısı</div><div class="num">'+s.overdueEvents+'</div></div>'+
+        '<div class="stat"><div class="lbl">Toplam işlem</div><div class="num">'+s.assignments+'</div></div>'+
+        '<div class="stat"><div class="lbl">Ort. aciliyet</div><div class="num">%'+avgUr+'</div></div>'+
+        '<div class="stat"><div class="lbl">Hemşire kullanımı</div><div class="num">%'+util+'</div></div></div>';
+      if(!state.auto.running){ document.getElementById('overdueCard').style.display='block'; updateOverdueChart(s.perPatient||{}); }
+    }
+    el.innerHTML='<div class="controls-row" style="margin-bottom:12px;">'+
+        '<div class="field"><label>Simülasyon süresi: <span class="val">'+state.auto.durationH+' saat</span></label>'+
+          '<input type="range" id="durH" min="12" max="72" step="6" value="'+state.auto.durationH+'" '+(state.auto.running?'disabled':'')+'></div>'+
+        '<div class="btn-row">'+(state.auto.running?'<button class="btn" data-action="autoStop">Durdur</button>':'<button class="btn btn-primary" data-action="autoStart">Çalıştır</button>')+'</div></div>'+
+      (state.auto.running?'<div class="progress-outer"><div class="progress-inner" style="width:'+progressPct+'%;"></div></div><div class="footnote">'+fmtClock(state.clock)+' simüle ediliyor…</div>':'')+statsHtml;
+  }
+
+  function updateUrgencyChart(){
+    if(!urgencyChart) return;
+    var labels=state.history.map(function(h){return h.t;});
+    var datasets=state.patients.map(function(p, idx){
+      return { label:p.name, data:state.history.map(function(h){return h.values[p.id];}),
+        borderColor:palette[idx%palette.length], backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.15 };
+    });
+    datasets.push({ label:'Eşik (vade %100)', data:labels.map(function(){return 100;}), borderColor:'#9aa3ab', borderDash:[4,4], borderWidth:1, pointRadius:0 });
+    urgencyChart.data.labels=labels; urgencyChart.data.datasets=datasets;
+    urgencyChart.options.plugins.legend.display = state.patients.length<=12;
+    urgencyChart.update('none');
+    var note=document.getElementById('chartNote');
+    if(note) note.textContent = state.patients.length>12 ? state.patients.length+' hastanın tümü gösteriliyor. Lejant gizlendi; bir çizginin üzerine gelince tooltip hastayı gösterir. Renkler '+palette.length+' hastada bir tekrarlanır.' : '';
+  }
+  function updateOverdueChart(perPatient){
+    if(!overdueChart) return;
+    overdueChart.data.labels=state.patients.map(function(p){return p.name;});
+    overdueChart.data.datasets=[{ label:'Gecikme', data:state.patients.map(function(p){return perPatient[p.id]||0;}), backgroundColor:'#d1392b', borderRadius:4, maxBarThickness:28 }];
+    overdueChart.update();
+  }
+
+  function render(){
+    document.getElementById('clockOut').textContent=fmtClock(state.clock);
+    document.getElementById('modeStepBtn').classList.toggle('active', state.mode==='step');
+    document.getElementById('modeAutoBtn').classList.toggle('active', state.mode==='auto');
+    renderNurses(); renderQueue();
+    if(state.mode==='step'){
+      document.getElementById('stepPanel').style.display='block';
+      document.getElementById('autoPanel').style.display='none';
+      renderStepPanel();
+    } else {
+      document.getElementById('stepPanel').style.display='none';
+      document.getElementById('autoPanel').style.display='block';
+      renderAutoPanel();
+    }
+    updateUrgencyChart();
+  }
+
+  // ---- events ----
+  document.getElementById('nurseCount').addEventListener('input', function(e){
+    document.getElementById('nurseCountOut').textContent=e.target.value;
+    var n=parseInt(e.target.value); state.numNurses=n;
+    if(state.nurses.length>n){
+      state.nurses.slice(n).forEach(function(nn){ if(nn.patientId){var p=findPatient(nn.patientId); if(p)p.status='waiting';} });
+      state.nurses=state.nurses.slice(0,n);
+    } else { while(state.nurses.length<n){ var idx=state.nurses.length; state.nurses.push({id:'n'+idx,name:'Hemşire '+(idx+1),busy:false,busyUntil:0,patientId:null,totalMinutes:0,totalPatients:0}); } }
+    render();
+  });
+  document.getElementById('patientCount').addEventListener('input', function(e){
+    document.getElementById('patientCountOut').textContent=e.target.value;
+    state.patientCountTarget=parseInt(e.target.value);
+  });
+  document.getElementById('triggerSlider').addEventListener('input', function(e){
+    state.trigger=parseFloat(e.target.value);
+    document.getElementById('triggerOut').textContent=state.trigger.toFixed(2); render();
+  });
+  document.getElementById('lookaheadSlider').addEventListener('input', function(e){
+    state.lookahead=parseInt(e.target.value);
+    document.getElementById('lookaheadOut').textContent=state.lookahead; render();
+  });
+  document.getElementById('scaleSelect').addEventListener('change', function(e){
+    state.scale=e.target.value; render();
+  });
+  document.getElementById('regenBtn').addEventListener('click', regenPatients);
+  document.getElementById('resetBtn').addEventListener('click', resetClock);
+  document.getElementById('mlBtn').addEventListener('click', applyMLRecommendation);
+  document.getElementById('modeStepBtn').addEventListener('click', function(){state.mode='step'; render();});
+  document.getElementById('modeAutoBtn').addEventListener('click', function(){state.mode='auto'; render();});
+
+  document.getElementById('queuePanel').addEventListener('click', function(e){
+    var btn=e.target.closest('button'); if(!btn) return;
+    var action=btn.getAttribute('data-action'), id=btn.getAttribute('data-id');
+    if(action==='start'){ state.uiConfirm=id; render(); }
+    else if(action==='confirm'){ var inp=document.getElementById('bIn-'+id); var v=parseInt(inp.value); if(isNaN(v))v=(state.scale==='jc'?findPatient(id).jc:findPatient(id).braden); confirmAction(id,v); }
+    else if(action==='cancel'){ cancelAction(id); }
+  });
+  document.getElementById('queuePanel').addEventListener('change', function(e){
+    var field=e.target.getAttribute('data-field'), id=e.target.getAttribute('data-id');
+    if(!field) return; var p=findPatient(id); if(!p) return;
+    var val=parseFloat(e.target.value);
+    if(field==='braden') p.braden=Math.max(6,Math.min(23,isNaN(val)?p.braden:val));
+    else if(field==='jc') p.jc=Math.max(9,Math.min(48,isNaN(val)?p.jc:val));
+    else if(field==='serviceTime') p.serviceTime=Math.max(3,Math.min(60,isNaN(val)?p.serviceTime:val));
+    else if(['ventilation','ageRisk','perfusion'].indexOf(field)>=0) p[field]=isNaN(val)?p[field]:val;
+    render();
+  });
+  document.getElementById('stepPanel').addEventListener('click', function(e){
+    var btn=e.target.closest('button'); if(!btn) return;
+    var action=btn.getAttribute('data-action');
+    if(action==='adv15') stepAdvance(15);
+    else if(action==='adv30') stepAdvance(30);
+    else if(action==='adv60') stepAdvance(60);
+  });
+  document.getElementById('autoPanel').addEventListener('click', function(e){
+    var btn=e.target.closest('button'); if(!btn) return;
+    var action=btn.getAttribute('data-action');
+    if(action==='autoStart') autoStart();
+    else if(action==='autoStop') autoStop();
+  });
+  document.getElementById('autoPanel').addEventListener('input', function(e){
+    if(e.target.id==='durH'){ state.auto.durationH=parseInt(e.target.value); render(); }
+  });
+
+  var urgencyChart, overdueChart;
+  function initCharts(){
+    var ctx1=document.getElementById('urgencyChart').getContext('2d');
+    urgencyChart=new Chart(ctx1,{type:'line',data:{labels:[],datasets:[]},options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      scales:{ y:{title:{display:true,text:'Aciliyet oranı (%)'},ticks:{color:'#6b7280'},grid:{color:'#e5e8ea'}},
+        x:{title:{display:true,text:'Simüle saat'},ticks:{color:'#6b7280',maxTicksLimit:12},grid:{display:false}} },
+      plugins:{ legend:{position:'bottom',labels:{boxWidth:10,font:{size:11}}} }
+    }});
+    var ctx2=document.getElementById('overdueChart').getContext('2d');
+    overdueChart=new Chart(ctx2,{type:'bar',data:{labels:[],datasets:[]},options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      scales:{ y:{beginAtZero:true,ticks:{stepSize:1,color:'#6b7280'},grid:{color:'#e5e8ea'}}, x:{ticks:{color:'#6b7280'},grid:{display:false}} },
+      plugins:{ legend:{display:false} }
+    }});
+  }
+
+  initCharts(); recordHistory(); render();
+})();
+</script>
+</body>
+</html>
